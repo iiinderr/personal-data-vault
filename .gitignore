@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+env/
+venv/
+
+# Secrets — NEVER commit these
+.env
+*.key
+*.pem
+
+# Database file (contains real data)
+vault.db
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+env/
+venv/
+
+# Secrets — NEVER commit these
+.env
+*.key
+*.pem
+
+# Database file (contains real data)
+vault.db
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
