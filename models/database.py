@@ -41,5 +41,35 @@ class User(Base):
 
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    notes = relationship("EncryptedNote", back_populates="owner", cascade="all, delete-orphan")
+
+    documents = relationship("DocumentMetadata", back_populates="owner", cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<User id={self.id} username={self.username} role={self.role.value}>"
+
+class DocumentMetadata(Base):
+    __tablename__ = "document_metadata"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    file_name = Column(String(255), nullable=False)
+
+    file_type = Column(String(50))
+
+    file_size = Column(Integer)
+
+    encrypted_file_path = Column(Text, nullable=False)
+
+    tags = Column(String(500))
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    owner = relationship("User", back_populates="documents")
+
+    def __repr__(self):
+        return f"<DocumentMetadata id={self.id} file_name={self.file_name}>"
