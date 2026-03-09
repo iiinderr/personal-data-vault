@@ -1,8 +1,8 @@
 from models.database import Base, engine, SessionLocal
-from models.database import User, EncryptedNote, DocumentMetadata, UserRole , PasswordHint , AuditLog
+from models.database import User, EncryptedNote, DocumentMetadata, UserRole , PasswordHint , AuditLog , init_db
 
-# create tables
-Base.metadata.create_all(bind=engine)
+# function called to create tables 
+init_db()
 
 print("Tables created successfully")
 
@@ -12,8 +12,8 @@ db = SessionLocal()
 
 # create a user
 user = User(
-    username="gaggi",
-    email="gaggi@test.com",
+    username="gaggi3",
+    email="gaggi3@test.com",
     password_hash="hashedpassword123",
     role=UserRole.ADMIN
 )
