@@ -1,27 +1,31 @@
-# Imports
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Enum
-from sqlalchemy.orm import declarative_base, sessionmaker
+# imports
+from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Enum
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from datetime import datetime
 import enum
 
-# Base class for all models
+
+# base class
 Base = declarative_base()
 
-# Database connection
+# database engine
 engine = create_engine("sqlite:///vault.db", echo=True)
 
-# Session maker
+# session
 SessionLocal = sessionmaker(bind=engine)
 
 
-# Role Enum
+# enum for roles
 class UserRole(enum.Enum):
     ADMIN = "admin"
     EDITOR = "editor"
     VIEWER = "viewer"
 
 
-# User Model
+# -------------------------
+# USER MODEL
+# -------------------------
+
 class User(Base):
     __tablename__ = "users"
 
@@ -41,12 +45,45 @@ class User(Base):
 
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # relationships
     notes = relationship("EncryptedNote", back_populates="owner", cascade="all, delete-orphan")
 
     documents = relationship("DocumentMetadata", back_populates="owner", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User id={self.id} username={self.username} role={self.role.value}>"
+
+
+# -------------------------
+# ENCRYPTED NOTE MODEL
+# -------------------------
+
+class EncryptedNote(Base):
+    __tablename__ = "encrypted_notes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    title = Column(String(200), nullable=False)
+
+    encrypted_content = Column(Text, nullable=False)
+
+    encryption_key_hint = Column(String(100))
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    owner = relationship("User", back_populates="notes")
+
+    def __repr__(self):
+        return f"<EncryptedNote id={self.id} title={self.title}>"
+
+
+# -------------------------
+# DOCUMENT METADATA MODEL
+# -------------------------
 
 class DocumentMetadata(Base):
     __tablename__ = "document_metadata"
@@ -72,4 +109,68 @@ class DocumentMetadata(Base):
     owner = relationship("User", back_populates="documents")
 
     def __repr__(self):
-        return f"<DocumentMetadata id={self.id} file_name={self.file_name}>"
+        return f"<DocumentMetadata id={self.id} file_name={self.file_name}>" 
+
+# -------------------------
+# PASSWORD HINT MODEL
+# -------------------------
+
+class PasswordHint(Base):
+    """
+    Stores encrypted hints for user passwords.
+    The actual password is never stored here — only a hint that helps the user remember it.
+    """
+
+    __tablename__ = "password_hints"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # name of the service (gmail, github, bank etc.)
+    service_name = Column(String(200), nullable=False)
+
+    # encrypted hint text
+    encrypted_hint = Column(Text, nullable=False)
+
+    # optional login URL
+    url = Column(String(500))
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<PasswordHint id={self.id} service={self.service_name}>"
+
+# -------------------------
+# PASSWORD HINT MODEL
+# -------------------------
+
+class PasswordHint(Base):
+    """
+    Stores encrypted hints for user passwords.
+    The actual password is never stored here — only a hint that helps the user remember it.
+    """
+
+    __tablename__ = "password_hints"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # name of the service (gmail, github, bank etc.)
+    service_name = Column(String(200), nullable=False)
+
+    # encrypted hint text
+    encrypted_hint = Column(Text, nullable=False)
+
+    # optional login URL
+    url = Column(String(500))
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<PasswordHint id={self.id} service={self.service_name}>"
