@@ -1,5 +1,5 @@
 from models.database import Base, engine, SessionLocal
-from models.database import User, EncryptedNote, DocumentMetadata, UserRole , PasswordHint  
+from models.database import User, EncryptedNote, DocumentMetadata, UserRole , PasswordHint , AuditLog
 
 # create tables
 Base.metadata.create_all(bind=engine)
@@ -12,8 +12,8 @@ db = SessionLocal()
 
 # create a user
 user = User(
-    username="inder3",
-    email="inder3@test.com",
+    username="gaggi",
+    email="gaggi@test.com",
     password_hash="hashedpassword123",
     role=UserRole.ADMIN
 )
@@ -66,3 +66,17 @@ db.add(hint)
 db.commit()
 
 print("Password hint inserted")
+
+log = AuditLog(
+    user_id=user.id,
+    action="CREATE_NOTE",
+    resource_type="encrypted_notes",
+    resource_id=note.id,
+    details="User created a note",
+    ip_address="127.0.0.1"
+)
+
+db.add(log)
+db.commit()
+
+print("Audit log inserted")
