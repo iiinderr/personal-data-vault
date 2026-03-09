@@ -177,3 +177,21 @@ class AuditLog(Base):
 
     def __repr__(self):
         return f"<AuditLog id={self.id} action={self.action} user_id={self.user_id}>"
+    
+# -------------------------
+# DATABASE INITIALIZATION
+# -------------------------
+
+def init_db():
+    """
+    Initializes the database.
+
+    This function creates all tables defined in the SQLAlchemy models.
+    If the tables already exist, SQLAlchemy will not recreate them.
+
+    It is usually called once when the application starts.
+    """
+
+    Base.metadata.create_all(bind=engine)
+
+    print("[DB] All tables initialized successfully.")
