@@ -50,6 +50,8 @@ class User(Base):
 
     documents = relationship("DocumentMetadata", back_populates="owner", cascade="all, delete-orphan")
 
+    audit_logs = relationship("AuditLog", back_populates="user")
+
     def __repr__(self):
         return f"<User id={self.id} username={self.username} role={self.role.value}>"
 
@@ -144,33 +146,34 @@ class PasswordHint(Base):
         return f"<PasswordHint id={self.id} service={self.service_name}>"
 
 # -------------------------
-# PASSWORD HINT MODEL
+# AUDIT LOG MODEL
 # -------------------------
 
-class PasswordHint(Base):
+class AuditLog(Base):
     """
-    Stores encrypted hints for user passwords.
-    The actual password is never stored here — only a hint that helps the user remember it.
+    Records important actions in the system such as login,
+    creating notes, or deleting documents.
     """
 
-    __tablename__ = "password_hints"
+    __tablename__ = "audit_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    # name of the service (gmail, github, bank etc.)
-    service_name = Column(String(200), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
-    # encrypted hint text
-    encrypted_hint = Column(Text, nullable=False)
+    action = Column(String(100), nullable=False)
 
-    # optional login URL
-    url = Column(String(500))
+    resource_type = Column(String(50))
 
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    resource_id = Column(Integer)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    details = Column(Text)
 
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    ip_address = Column(String(45))
+
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", back_populates="audit_logs")
 
     def __repr__(self):
-        return f"<PasswordHint id={self.id} service={self.service_name}>"
+        return f"<AuditLog id={self.id} action={self.action} user_id={self.user_id}>"
