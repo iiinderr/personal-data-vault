@@ -13,3 +13,12 @@ def load_key_from_env(env_var="VAULT_ENCRYPTION_KEY"):
         raise ValueError("Encryption key not set")
 
     return key.encode()
+
+class EncryptionService:
+
+    def __init__(self, key: bytes):
+        self._fernet = Fernet(key)
+
+    def encrypt(self, plaintext: str) -> str:
+        ciphertext = self._fernet.encrypt(plaintext.encode("utf-8"))
+        return ciphertext.decode("utf-8")
