@@ -90,6 +90,35 @@ class EncryptionService:
         # Convert decrypted bytes back to string
         return decrypted_bytes.decode("utf-8")
     
+    def encrypt_field(self, value: str | None) -> str | None:
+        """
+        Helper method to safely encrypt optional fields.
+
+        Some database columns may contain NULL values.
+        If we try to encrypt None, the program would crash.
+
+        This function checks if the value exists before encrypting.
+        """
+
+        if value is None:
+            return None
+
+        return self.encrypt(value)
+
+
+    def decrypt_field(self, value: str | None) -> str | None:
+        """
+        Helper method to safely decrypt optional fields.
+
+        If the value is None (NULL in database),
+        we simply return None instead of decrypting.
+        """
+
+        if value is None:
+            return None
+
+        return self.decrypt(value)
+    
 def derive_key_from_password(password: str, salt: bytes = None):
     """
     Derives a secure Fernet encryption key from a user password.
