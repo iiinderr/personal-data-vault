@@ -1,6 +1,9 @@
 # ── Imports ──────────────────────────────────────────────
 import os
+import base64
 from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 # ── Key utilities ─────────────────────────────────────────
@@ -86,3 +89,37 @@ class EncryptionService:
 
         # Convert decrypted bytes back to string
         return decrypted_bytes.decode("utf-8")
+    
+def derive_key_from_password(password: str, salt: bytes = None):
+    """
+    Derives a secure Fernet encryption key from a user password.
+
+    Why we do this:
+    Instead of storing encryption keys directly, we can generate
+    them from user passwords using a Key Derivation Function.
+
+    PBKDF2 applies hashing many times to make brute-force attacks slower.
+
+    Returns:
+        (fernet_key, salt)
+    """
+
+    # If no salt is provided, generate a new random one
+    if salt is None:
+        salt = os.urandom(16)
+
+    # Configure PBKDF2
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),   # hashing algorithm
+        length=32,                   # output key length
+        salt=salt,                   # random salt
+        iterations=390000,           # recommended iteration count
+    )
+
+    # derive raw key bytes from password
+    key_bytes = kdf.derive(password.encode())
+
+    # Fernet requires base64 encoded key
+    fernet_key = base64.urlsafe_b64encode(key_bytes)
+
+    return fernet_key, salt
