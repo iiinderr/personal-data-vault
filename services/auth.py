@@ -1,13 +1,18 @@
-"""
-auth.py — Authentication utilities.
-
-Currently handles:
-1. Password hashing using bcrypt
-"""
-
 # ── Imports ─────────────────────────────────────────
+import os
+from datetime import datetime, timedelta, timezone
 
-import bcrypt   # Library used for secure password hashing
+import bcrypt
+import jwt
+
+# JWT secret key used to sign tokens
+JWT_SECRET = os.environ.get("JWT_SECRET", "CHANGE_THIS_IN_PRODUCTION")
+
+# algorithm used for signing
+JWT_ALGORITHM = "HS256"
+
+# token expiry time
+TOKEN_EXPIRY_MINUTES = 60
 
 
 # ── Password Utilities ──────────────────────────────
@@ -44,3 +49,26 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         plain_password.encode("utf-8"),
         hashed_password.encode("utf-8")
     )
+
+def create_access_token(user_id: int, username: str, role: str) -> str:
+    """
+    Create a JWT token for authenticated users.
+
+    The token contains user information and expiry time.
+    """
+
+    # get current time in UTC
+    now = datetime.now(timezone.utc)
+
+    payload = {
+        "sub": str(user_id),                              # subject (user id)
+        "username": username,
+        "role": role,
+        "exp": now + timedelta(minutes=TOKEN_EXPIRY_MINUTES),  # expiry time
+        "iat": now                                        # issued at
+    }
+
+    # sign the token using our secret key
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+    return token
