@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import bcrypt
 import jwt
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 # JWT secret key used to sign tokens
 JWT_SECRET = os.environ.get("JWT_SECRET", "CHANGE_THIS_IN_PRODUCTION")
@@ -72,3 +73,25 @@ def create_access_token(user_id: int, username: str, role: str) -> str:
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
     return token
+
+def decode_access_token(token: str) -> dict:
+    """
+    Decode and validate a JWT token.
+
+    The function verifies:
+    - the signature (token was not tampered with)
+    - the expiry time
+    - the algorithm used
+
+    Returns the decoded payload if valid.
+    """
+
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+
+    except ExpiredSignatureError:
+        raise ValueError("Token has expired. Please login again.")
+
+    except InvalidTokenError:
+        raise ValueError("Invalid authentication token.")
