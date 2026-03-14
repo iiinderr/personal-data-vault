@@ -91,7 +91,9 @@ def decode_access_token(token: str) -> dict:
         return payload
 
     except ExpiredSignatureError:
-        raise ValueError("Token has expired. Please login again.")
+        # Token was valid but expired
+        raise ValueError("[AUTH] Token has expired. Please log in again.")
 
-    except InvalidTokenError:
-        raise ValueError("Invalid authentication token.")
+    except InvalidTokenError as e:
+        # Covers tampered tokens, malformed tokens, wrong signature, etc.
+        raise ValueError(f"[AUTH] Invalid token: {str(e)}")
