@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 import bcrypt
 import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+from functools import wraps
 
 # JWT secret key used to sign tokens
 JWT_SECRET = os.environ.get("JWT_SECRET", "CHANGE_THIS_IN_PRODUCTION")
@@ -109,3 +110,21 @@ ROLE_HIERARCHY = {
 
 print(ROLE_HIERARCHY["admin"])   # 2
 print(ROLE_HIERARCHY["viewer"]) 
+
+def require_role(minimum_role: str):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(current_user: dict, *args, **kwargs):
+            user_role  = current_user.get("role", "viewer")
+            user_level = ROLE_HIERARCHY.get(user_role, 0)
+            min_level  = ROLE_HIERARCHY.get(minimum_role, 0)
+
+            if user_level < min_level:
+                raise PermissionError(
+                    f"[RBAC] Access denied. Required: '{minimum_role}', your role: '{user_role}'."
+                )
+
+            return func(current_user, *args, **kwargs)
+        return wrapper
+    return decorator
+
