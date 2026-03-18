@@ -128,3 +128,9 @@ def require_role(minimum_role: str):
         return wrapper
     return decorator
 
+def is_owner_or_admin(current_user: dict, resource_owner_id: int) -> bool:
+    user_id   = int(current_user.get("sub", -1))
+    user_role = current_user.get("role", "viewer")
+
+    return (user_id == resource_owner_id) or (user_role == "admin")
+
