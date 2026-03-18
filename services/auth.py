@@ -97,3 +97,15 @@ def decode_access_token(token: str) -> dict:
     except InvalidTokenError as e:
         # Covers tampered tokens, malformed tokens, wrong signature, etc.
         raise ValueError(f"[AUTH] Invalid token: {str(e)}")
+
+# ── Role-Based Access Control ─────────────────────────────────────────────────
+
+# Define role hierarchy. Higher index = more permissions.
+ROLE_HIERARCHY = {
+    "viewer": 0,    # Read-only access
+    "editor": 1,    # Can modify own data
+    "admin":  2,    # Full system access
+}
+
+print(ROLE_HIERARCHY["admin"])   # 2
+print(ROLE_HIERARCHY["viewer"]) 
