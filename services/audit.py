@@ -73,5 +73,53 @@ class AuditLogger:
             return logs
     
         finally:
-            db.close()       
+            db.close()     
+
+# ── Audit Action Constants ─────────────────────────
+
+class AuditAction:
+    """
+    Centralized list of all audit actions.
+
+    Why?
+    - Prevent typos in string values
+    - Easy to manage and search actions
+    """
+
+    LOGIN_SUCCESS = "LOGIN_SUCCESS"
+    LOGIN_FAILED  = "LOGIN_FAILED"
+    LOGOUT        = "LOGOUT"
+
+    CREATE_NOTE   = "CREATE_NOTE"
+    READ_NOTE     = "READ_NOTE"
+    UPDATE_NOTE   = "UPDATE_NOTE"
+    DELETE_NOTE   = "DELETE_NOTE"
+
+    CREATE_USER   = "CREATE_USER"
+    DELETE_USER   = "DELETE_USER"
+
+    UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS"# ── Audit Action Constants ─────────────────────────
+
+class AuditAction:
+    """
+    Centralized list of all audit actions.
+
+    Why?
+    - Prevent typos in string values
+    - Easy to manage and search actions
+    """
+
+    LOGIN_SUCCESS = "LOGIN_SUCCESS"
+    LOGIN_FAILED  = "LOGIN_FAILED"
+    LOGOUT        = "LOGOUT"
+
+    CREATE_NOTE   = "CREATE_NOTE"
+    READ_NOTE     = "READ_NOTE"
+    UPDATE_NOTE   = "UPDATE_NOTE"
+    DELETE_NOTE   = "DELETE_NOTE"
+
+    CREATE_USER   = "CREATE_USER"
+    DELETE_USER   = "DELETE_USER"
+
+    UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS" 
 
