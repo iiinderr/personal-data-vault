@@ -74,6 +74,29 @@ class AuditLogger:
     
         finally:
             db.close()     
+    
+    def get_all_logs(self, limit: int = 500) -> list:
+        """
+        Fetch recent audit logs for all users.
+    
+        - Intended for admin use only
+        - Returns latest logs first
+        """
+    
+        db = SessionLocal()
+    
+        try:
+            logs = (
+                db.query(AuditLog)
+                  .order_by(AuditLog.timestamp.desc())  # newest first
+                  .limit(limit)                         # restrict results
+                  .all()
+            )
+    
+            return logs
+    
+        finally:
+            db.close()
 
 # ── Audit Action Constants ─────────────────────────
 
@@ -98,28 +121,5 @@ class AuditAction:
     CREATE_USER   = "CREATE_USER"
     DELETE_USER   = "DELETE_USER"
 
-    UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS"# ── Audit Action Constants ─────────────────────────
-
-class AuditAction:
-    """
-    Centralized list of all audit actions.
-
-    Why?
-    - Prevent typos in string values
-    - Easy to manage and search actions
-    """
-
-    LOGIN_SUCCESS = "LOGIN_SUCCESS"
-    LOGIN_FAILED  = "LOGIN_FAILED"
-    LOGOUT        = "LOGOUT"
-
-    CREATE_NOTE   = "CREATE_NOTE"
-    READ_NOTE     = "READ_NOTE"
-    UPDATE_NOTE   = "UPDATE_NOTE"
-    DELETE_NOTE   = "DELETE_NOTE"
-
-    CREATE_USER   = "CREATE_USER"
-    DELETE_USER   = "DELETE_USER"
-
-    UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS" 
+    UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS"
 
