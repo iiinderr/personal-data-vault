@@ -108,9 +108,6 @@ ROLE_HIERARCHY = {
     "admin":  2,    # Full system access
 }
 
-print(ROLE_HIERARCHY["admin"])   # 2
-print(ROLE_HIERARCHY["viewer"]) 
-
 def require_role(minimum_role: str):
     def decorator(func):
         @wraps(func)
