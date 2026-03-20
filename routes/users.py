@@ -1,9 +1,9 @@
 # ── Imports ─────────────────────────────
-from fastapi import APIRouter, HTTPException, Request, Depends, Header
+from fastapi import APIRouter, HTTPException, Request, Depends, Header 
 from pydantic import BaseModel, EmailStr, field_validator
 
 from models.database import SessionLocal, User ,UserRole
-from services.auth import verify_password, create_access_token ,decode_access_token
+from services.auth import verify_password, create_access_token ,decode_access_token , hash_password
 from services.audit import audit_logger, AuditAction
 
 
@@ -100,3 +100,38 @@ def get_my_profile(current_user: dict = Depends(get_current_user)):
     finally:
         db.close()
 
+@router.post("/register", status_code=201)
+def register_user(body: RegisterRequest, request: Request):
+    db = SessionLocal()
+
+    try:
+        # Check if user already exists
+        existing = db.query(User).filter(
+            (User.username == body.username) | (User.email == body.email)
+        ).first()
+
+        if existing:
+            raise HTTPException(status_code=409, detail="Username or email already exists")
+
+        # Hash password
+        hashed_password = hash_password(body.password)
+
+        # Create user
+        new_user = User(
+            username=body.username,
+            email=body.email,
+            password_hash=hashed_password,
+            role=UserRole.VIEWER
+        )
+
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+        return {
+            "message": "User registered successfully",
+            "user_id": new_user.id
+        }
+
+    finally:
+        db.close()
