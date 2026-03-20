@@ -1,9 +1,9 @@
 # ── Imports ─────────────────────────────
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends, Header
 from pydantic import BaseModel, EmailStr, field_validator
 
-from models.database import SessionLocal, User
-from services.auth import verify_password, create_access_token
+from models.database import SessionLocal, User ,UserRole
+from services.auth import verify_password, create_access_token ,decode_access_token
 from services.audit import audit_logger, AuditAction
 
 
@@ -64,3 +64,39 @@ def login(body: LoginRequest, request: Request):
 
     finally:
         db.close()
+
+def get_current_user(authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization format")
+
+    token = authorization.split(" ")[1]
+
+    try:
+        payload = decode_access_token(token)
+        return payload
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    
+
+@router.get("/me")
+def get_my_profile(current_user: dict = Depends(get_current_user)):
+    db = SessionLocal()
+
+    try:
+        user_id = int(current_user["sub"])
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": user.role.value,
+            "is_active": user.is_active
+        }
+
+    finally:
+        db.close()
+
