@@ -1,5 +1,6 @@
 # ── Imports ─────────────────────────────
 from fastapi import APIRouter, HTTPException, Request, Depends, Header 
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr, field_validator
 
 from models.database import SessionLocal, User ,UserRole
@@ -9,6 +10,8 @@ from services.audit import audit_logger, AuditAction
 
 # ── Router ─────────────────────────────
 router = APIRouter()
+
+security = HTTPBearer()
 
 
 # ── Schemas ────────────────────────────
@@ -65,11 +68,20 @@ def login(body: LoginRequest, request: Request):
     finally:
         db.close()
 
-def get_current_user(authorization: str = Header(...)):
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid authorization format")
+# def get_current_user(authorization: str = Header(...)):
+#     if not authorization.startswith("Bearer "):
+#         raise HTTPException(status_code=401, detail="Invalid authorization format")
 
-    token = authorization.split(" ")[1]
+#     token = authorization.split(" ")[1]
+
+#     try:
+#         payload = decode_access_token(token)
+#         return payload
+#     except ValueError as e:
+#         raise HTTPException(status_code=401, detail=str(e))
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials  # this gives ONLY token (no Bearer)
 
     try:
         payload = decode_access_token(token)
