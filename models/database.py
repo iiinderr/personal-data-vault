@@ -12,14 +12,14 @@ Base = declarative_base()
 engine = create_engine("sqlite:///vault.db", echo=True)
 
 # session
-SessionLocal = sessionmaker(bind=engine)
+SessionLocal = sessionmaker(bind=engine)  
 
 
 # enum for roles
 class UserRole(enum.Enum):
     ADMIN = "admin"
     EDITOR = "editor"
-    VIEWER = "viewer"
+    VIEWER = "viewer" 
 
 
 # -------------------------
@@ -72,7 +72,7 @@ class EncryptedNote(Base):
     encryption_key_hint = Column(String(100))
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-
+    
     created_at = Column(DateTime, default=datetime.utcnow)
 
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

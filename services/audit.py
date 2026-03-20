@@ -123,3 +123,5 @@ class AuditAction:
 
     UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS"
 
+#added this line
+audit_logger = AuditLogger()

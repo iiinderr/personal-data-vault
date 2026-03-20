@@ -1,15 +1,19 @@
-from services.encryption import generate_key, EncryptionService
+from services.encryption import derive_key_from_password, EncryptionService
 
-key = generate_key()
+password = "vault_password"
+
+key, salt = derive_key_from_password(password) 
 
 service = EncryptionService(key)
 
-text = "my secret note"
+text = "secret vault note"
 
-# encrypt
-encrypted = service.encrypt(text)
+encrypted = service.encrypt_field(text)
 print("Encrypted:", encrypted)
 
-# decrypt
-decrypted = service.decrypt(encrypted)
+decrypted = service.decrypt_field(encrypted)
 print("Decrypted:", decrypted)
+
+# test None case
+print("None encryption:", service.encrypt_field(None))
+print("None decryption:", service.decrypt_field(None))
