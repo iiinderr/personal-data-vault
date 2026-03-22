@@ -1,0 +1,56 @@
+from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel
+from typing import Optional
+
+from models.database import SessionLocal, EncryptedNote
+from routes.users import get_current_user
+from services.encryption import get_encryption_service
+from services.audit import audit_logger, AuditAction
+
+
+router = APIRouter()
+
+class NoteCreateRequest(BaseModel):
+    title: str
+    content: str
+    encryption_key_hint: Optional[str] = None
+
+
+@router.post("/", status_code=201)
+def create_note(
+    body: NoteCreateRequest,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    enc = get_encryption_service()
+    db = SessionLocal()
+
+    try:
+        encrypted_content = enc.encrypt(body.content)
+
+        user_id = int(current_user["sub"])
+
+        note = EncryptedNote(
+            title=body.title,
+            encrypted_content=encrypted_content,
+            encryption_key_hint=body.encryption_key_hint,
+            user_id=user_id,
+        )
+
+        db.add(note)
+        db.commit()
+        db.refresh(note)
+
+        audit_logger.log(
+            action=AuditAction.CREATE_NOTE,
+            user_id=user_id,
+            resource_type="encrypted_notes",
+            resource_id=note.id,
+            details=f"Created note '{body.title}'.",
+            ip_address=request.client.host,
+        )
+
+        return {"message": "Note created.", "note_id": note.id}
+
+    finally:
+        db.close()
