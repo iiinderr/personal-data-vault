@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request , HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
@@ -6,6 +6,7 @@ from models.database import SessionLocal, EncryptedNote
 from routes.users import get_current_user
 from services.encryption import get_encryption_service
 from services.audit import audit_logger, AuditAction
+from services.auth import is_owner_or_admin
 
 
 router = APIRouter()
@@ -86,6 +87,57 @@ def list_notes(current_user: dict = Depends(get_current_user)):
             }
             for n in notes
         ]
+
+    finally:
+        db.close()
+
+@router.get("/{note_id}")
+def get_note(
+    note_id: int,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Fetch a single note and decrypt its content.
+    """
+    enc = get_encryption_service()
+    db = SessionLocal()
+
+    try:
+        note = db.query(EncryptedNote).filter(EncryptedNote.id == note_id).first()
+
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
+
+        # Ownership / admin check
+        if not is_owner_or_admin(current_user, note.user_id):
+            audit_logger.log(
+                action=AuditAction.UNAUTHORIZED_ACCESS,
+                user_id=int(current_user["sub"]),
+                resource_type="encrypted_notes",
+                resource_id=note_id,
+                ip_address=request.client.host,
+            )
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Decrypt content
+        decrypted_content = enc.decrypt(note.encrypted_content)
+
+        audit_logger.log(
+            action=AuditAction.READ_NOTE,
+            user_id=int(current_user["sub"]),
+            resource_type="encrypted_notes",
+            resource_id=note_id,
+            ip_address=request.client.host,
+        )
+
+        return {
+            "id": note.id,
+            "title": note.title,
+            "content": decrypted_content,
+            "encryption_key_hint": note.encryption_key_hint,
+            "user_id": note.user_id,
+        }
 
     finally:
         db.close()
