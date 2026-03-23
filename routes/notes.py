@@ -141,3 +141,41 @@ def get_note(
 
     finally:
         db.close()
+
+@router.delete("/{note_id}", status_code=204)
+def delete_note(
+    note_id: int,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete a note (only owner or admin).
+    """
+    db = SessionLocal()
+
+    try:
+        note = db.query(EncryptedNote).filter(EncryptedNote.id == note_id).first()
+
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
+
+        # Authorization check
+        if not is_owner_or_admin(current_user, note.user_id):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        db.delete(note)
+        db.commit()
+
+        audit_logger.log(
+            action=AuditAction.DELETE_NOTE,
+            user_id=int(current_user["sub"]),
+            resource_type="encrypted_notes",
+            resource_id=note_id,
+            details=f"Deleted note '{note.title}'",
+            ip_address=request.client.host,
+        )
+
+        return None   # 204 → no content
+
+    finally:
+        db.close()
