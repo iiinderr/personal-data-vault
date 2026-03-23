@@ -100,3 +100,24 @@ def get_hint(
 
     finally:
         db.close()
+
+@router.get("/")
+def list_hints(current_user: dict = Depends(get_current_user)):
+    db = SessionLocal()
+    user_id = int(current_user["sub"])
+
+    try:
+        hints = db.query(PasswordHint).filter(PasswordHint.user_id == user_id).all()
+
+        return [
+            {
+                "id": h.id,
+                "service_name": h.service_name,
+                "url": h.url,
+                # Do NOT return hint (security)
+            }
+            for h in hints
+        ]
+
+    finally:
+        db.close()
