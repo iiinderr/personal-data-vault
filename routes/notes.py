@@ -54,3 +54,38 @@ def create_note(
 
     finally:
         db.close()
+
+@router.get("/")
+def list_notes(current_user: dict = Depends(get_current_user)):
+    """
+    Returns all notes for the logged-in user.
+    Admin can see all notes, normal users see only their own.
+    """
+    db = SessionLocal()
+
+    user_id = int(current_user["sub"])
+    role = current_user.get("role", "viewer")
+
+    try:
+        query = db.query(EncryptedNote)
+
+        # If not admin → only own notes
+        if role != "admin":
+            query = query.filter(EncryptedNote.user_id == user_id)
+
+        notes = query.all()
+
+        # Return only metadata (NOT decrypted content)
+        return [
+            {
+                "id": n.id,
+                "title": n.title,
+                "encryption_key_hint": n.encryption_key_hint,
+                "user_id": n.user_id,
+                "created_at": n.created_at.isoformat(),
+            }
+            for n in notes
+        ]
+
+    finally:
+        db.close()
