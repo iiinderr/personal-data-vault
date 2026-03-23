@@ -16,6 +16,10 @@ class NoteCreateRequest(BaseModel):
     content: str
     encryption_key_hint: Optional[str] = None
 
+class NoteUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+
 
 @router.post("/", status_code=201)
 def create_note(
@@ -176,6 +180,169 @@ def delete_note(
         )
 
         return None   # 204 → no content
+
+    finally:
+        db.close()
+
+@router.put("/{note_id}")
+def update_note(
+    note_id: int,
+    body: NoteUpdateRequest,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update a note (title/content).
+    Re-encrypt content if updated.
+    """
+    enc = get_encryption_service()
+    db = SessionLocal()
+
+    try:
+        note = db.query(EncryptedNote).filter(EncryptedNote.id == note_id).first()
+
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
+
+        # Ownership check
+        if not is_owner_or_admin(current_user, note.user_id):
+            audit_logger.log(
+                action=AuditAction.UNAUTHORIZED_ACCESS,
+                user_id=int(current_user["sub"]),
+                resource_type="encrypted_notes",
+                resource_id=note_id,
+                ip_address=request.client.host,
+            )
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Update fields if provided
+        if body.title is not None:
+            note.title = body.title
+
+        if body.content is not None:
+            note.encrypted_content = enc.encrypt(body.content)
+
+        db.commit()
+        db.refresh(note)
+
+        audit_logger.log(
+            action=AuditAction.UPDATE_NOTE,
+            user_id=int(current_user["sub"]),
+            resource_type="encrypted_notes",
+            resource_id=note_id,
+            details=f"Updated note '{note.title}'",
+            ip_address=request.client.host,
+        )
+
+        return {"message": "Note updated successfully"}
+
+    finally:
+        db.close()
+
+@router.put("/{note_id}")
+def update_note(
+    note_id: int,
+    body: NoteUpdateRequest,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update a note (title/content).
+    Re-encrypt content if updated.
+    """
+    enc = get_encryption_service()
+    db = SessionLocal()
+
+    try:
+        note = db.query(EncryptedNote).filter(EncryptedNote.id == note_id).first()
+
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
+
+        # Ownership check
+        if not is_owner_or_admin(current_user, note.user_id):
+            audit_logger.log(
+                action=AuditAction.UNAUTHORIZED_ACCESS,
+                user_id=int(current_user["sub"]),
+                resource_type="encrypted_notes",
+                resource_id=note_id,
+                ip_address=request.client.host,
+            )
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Update fields if provided
+        if body.title is not None:
+            note.title = body.title
+
+        if body.content is not None:
+            note.encrypted_content = enc.encrypt(body.content)
+
+        db.commit()
+        db.refresh(note)
+
+        audit_logger.log(
+            action=AuditAction.UPDATE_NOTE,
+            user_id=int(current_user["sub"]),
+            resource_type="encrypted_notes",
+            resource_id=note_id,
+            details=f"Updated note '{note.title}'",
+            ip_address=request.client.host,
+        )
+
+        return {"message": "Note updated successfully"}
+
+    finally:
+        db.close()@router.put("/{note_id}")
+def update_note(
+    note_id: int,
+    body: NoteUpdateRequest,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update a note (title/content).
+    Re-encrypt content if updated.
+    """
+    enc = get_encryption_service()
+    db = SessionLocal()
+
+    try:
+        note = db.query(EncryptedNote).filter(EncryptedNote.id == note_id).first()
+
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
+
+        # Ownership check
+        if not is_owner_or_admin(current_user, note.user_id):
+            audit_logger.log(
+                action=AuditAction.UNAUTHORIZED_ACCESS,
+                user_id=int(current_user["sub"]),
+                resource_type="encrypted_notes",
+                resource_id=note_id,
+                ip_address=request.client.host,
+            )
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Update fields if provided
+        if body.title is not None:
+            note.title = body.title
+
+        if body.content is not None:
+            note.encrypted_content = enc.encrypt(body.content)
+
+        db.commit()
+        db.refresh(note)
+
+        audit_logger.log(
+            action=AuditAction.UPDATE_NOTE,
+            user_id=int(current_user["sub"]),
+            resource_type="encrypted_notes",
+            resource_id=note_id,
+            details=f"Updated note '{note.title}'",
+            ip_address=request.client.host,
+        )
+
+        return {"message": "Note updated successfully"}
 
     finally:
         db.close()
