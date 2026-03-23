@@ -64,3 +64,39 @@ def create_document(
 
     finally:
         db.close()
+
+@router.get("/")
+def list_documents(current_user: dict = Depends(get_current_user)):
+    """
+    Lists all document metadata for the current user.
+    Admin can see all documents.
+    """
+    db = SessionLocal()
+    user_id = int(current_user["sub"])
+    role = current_user.get("role", "viewer")
+
+    try:
+        query = db.query(DocumentMetadata)
+
+        # If not admin, only show user's documents
+        if role != "admin":
+            query = query.filter(DocumentMetadata.user_id == user_id)
+
+        docs = query.all()
+
+        return [
+            {
+                "id": d.id,
+                "file_name": d.file_name,
+                "file_type": d.file_type,
+                "file_size": d.file_size,
+                "tags": d.tags,
+                "user_id": d.user_id,
+                # NOTE: encrypted_file_path is NOT returned (security)
+            }
+            for d in docs
+        ]
+
+    finally:
+        db.close()
+
