@@ -118,7 +118,7 @@ class EncryptionService:
             return None
 
         return self.decrypt(value)
-    
+        
 def derive_key_from_password(password: str, salt: bytes = None):
     """
     Derives a secure Fernet encryption key from a user password.
@@ -152,3 +152,12 @@ def derive_key_from_password(password: str, salt: bytes = None):
     fernet_key = base64.urlsafe_b64encode(key_bytes)
 
     return fernet_key, salt
+
+# added
+def get_encryption_service():
+    key = os.getenv("VAULT_ENCRYPTION_KEY")
+
+    if not key:
+        raise ValueError("Encryption key not found in environment")
+
+    return EncryptionService(key=key.encode())

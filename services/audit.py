@@ -123,5 +123,13 @@ class AuditAction:
 
     UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS"
 
+    CREATE_DOCUMENT = "CREATE_DOCUMENT"
+
+    CREATE_HINT = "CREATE_HINT"
+
+    READ_HINT = "READ_HINT"
+
+    UPDATE_USER_ROLE = "UPDATE_USER_ROLE"
+
 #added this line
 audit_logger = AuditLogger()
