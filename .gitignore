@@ -8,6 +8,7 @@ build/
 .venv/
 env/
 venv/
+test_encryption/
 
 # Secrets — NEVER commit these
 .env
@@ -64,3 +65,12 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Ignore specific files
+make_admin.py
+test_encryption.py
+
+# Ignore test files
+test.py
+*_test.py
+test_*.py
