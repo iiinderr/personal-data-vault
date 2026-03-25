@@ -77,3 +77,54 @@ class TestAuth:
 
         with pytest.raises(ValueError):
             decode_access_token("this.is.not.valid")
+
+class TestRBAC:
+
+    def test_require_role_admin_blocks_viewer(self):
+        
+        from services.auth import require_role
+
+        @require_role("admin")
+        def admin_only(current_user):
+            return "secret"
+
+        viewer = {"sub": "1", "role": "viewer"}
+
+        with pytest.raises(PermissionError):
+            admin_only(viewer)
+
+    def test_require_role_admin_allows_admin(self):
+        
+        from services.auth import require_role
+
+        @require_role("admin")
+        def admin_only(current_user):
+            return "secret"
+
+        admin = {"sub": "1", "role": "admin"}
+
+        assert admin_only(admin) == "secret"
+
+    def test_is_owner_allows_owner(self):
+        
+        from services.auth import is_owner_or_admin
+
+        user = {"sub": "5", "role": "editor"}
+
+        assert is_owner_or_admin(user, resource_owner_id=5) is True
+
+    def test_is_owner_blocks_other_user(self):
+        
+        from services.auth import is_owner_or_admin
+
+        user = {"sub": "3", "role": "editor"}
+
+        assert is_owner_or_admin(user, resource_owner_id=5) is False
+
+    def test_admin_can_access_any_resource(self):
+        
+        from services.auth import is_owner_or_admin
+
+        admin = {"sub": "1", "role": "admin"}
+
+        assert is_owner_or_admin(admin, resource_owner_id=999) is True
