@@ -78,3 +78,4 @@ test_*.py
 # ── BUT allow ONLY this file ───────────────────────
 !tests/
 !tests/test_vault.py
+!!tests/test_api.py
