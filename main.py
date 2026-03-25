@@ -1,5 +1,6 @@
 
-from fastapi import FastAPI
+from fastapi import FastAPI , Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from routes.users import router as users_router
@@ -40,3 +41,17 @@ async def health_check():
 @app.get("/")
 async def root():
     return {"message": "API is running"}
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Catch all unhandled exceptions and return clean JSON response.
+    Prevents ugly HTML error pages.
+    """
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "An internal server error occurred.",
+            "type": type(exc).__name__
+        }
+    )
