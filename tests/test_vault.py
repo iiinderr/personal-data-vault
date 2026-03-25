@@ -70,3 +70,10 @@ class TestAuth:
         assert payload["sub"] == "42"
         assert payload["username"] == "alice"
         assert payload["role"] == "editor"
+
+    def test_invalid_jwt_raises(self):
+    
+        from services.auth import decode_access_token
+
+        with pytest.raises(ValueError):
+            decode_access_token("this.is.not.valid")
