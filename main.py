@@ -31,6 +31,12 @@ app.include_router(hints_router,  prefix="/api/v1/hints",     tags=["Password Hi
 app.include_router(admin_router,  prefix="/api/v1/admin",     tags=["Admin"])
 
 
+@app.get("/health", tags=["Health"])
+async def health_check():
+    
+    return {"status": "healthy", "service": "Personal Data Vault"}
+
+
 @app.get("/")
 async def root():
     return {"message": "API is running"}
