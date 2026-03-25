@@ -1,5 +1,6 @@
 import os
 import pytest
+from cryptography.fernet import InvalidToken
 
 os.environ["VAULT_ENCRYPTION_KEY"] = "test-password-123"
 
@@ -23,11 +24,37 @@ class TestEncryption:
         assert recovered == plaintext
 
     def test_tampered_ciphertext_raises(self):
-        
         ciphertext = self.enc.encrypt("sensitive data")
 
-        # Tamper with ciphertext
         tampered = ciphertext[:-5] + "abcde"
 
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidToken):
             self.enc.decrypt(tampered)
+
+class TestAuth:
+
+    def test_hash_password_not_equal_to_plain(self):
+        
+        from services.auth import hash_password
+
+        password = "mypassword"
+        hashed = hash_password(password)
+
+        assert hashed != password
+
+    def test_verify_password_correct(self):
+        
+        from services.auth import hash_password, verify_password
+
+        password = "correcthorse"
+        hashed = hash_password(password)
+
+        assert verify_password(password, hashed) is True
+
+    def test_verify_password_wrong(self):
+        
+        from services.auth import hash_password, verify_password
+
+        hashed = hash_password("correcthorse")
+
+        assert verify_password("wrongpassword", hashed) is False
