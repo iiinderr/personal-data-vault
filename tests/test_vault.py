@@ -58,3 +58,15 @@ class TestAuth:
         hashed = hash_password("correcthorse")
 
         assert verify_password("wrongpassword", hashed) is False
+
+    def test_jwt(self):
+        
+        from services.auth import create_access_token, decode_access_token
+
+        token = create_access_token(user_id=42, username="alice", role="editor")
+
+        payload = decode_access_token(token)
+
+        assert payload["sub"] == "42"
+        assert payload["username"] == "alice"
+        assert payload["role"] == "editor"
