@@ -9,12 +9,31 @@ from routes.documents import router as docs_router
 from routes.hints import router as hints_router
 from routes.admin import router as admin_router
 
+from contextlib import asynccontextmanager
+from models.database import init_db   #DB init function
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Runs on startup and shutdown.
+    """
+    print("[STARTUP] Initializing database...")
+    init_db()   # create tables if not exist
+    print("[STARTUP] App is running")
+
+    yield   # app runs here
+
+    print("[SHUTDOWN] App is shutting down")
+
 
 app = FastAPI(
     title="Personal Data Vault",
     description="Privacy-first API with encryption and RBAC",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan 
 )
+
 
 # CORS
 app.add_middleware(
@@ -55,3 +74,5 @@ async def global_exception_handler(request: Request, exc: Exception):
             "type": type(exc).__name__
         }
     )
+
+
